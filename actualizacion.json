@@ -1,0 +1,25 @@
+{
+ "version": "1.7.0",
+ "files": {
+  "Instalar.bat": "2ffa8b8432ae07b79fdb0960316040ee5b6072fc3c652e7a374a046ebbe59cd0",
+  "instalar.ps1": "8e1083ffe4ae7ecef3fc6ce2cb3233e4f576edaae040ba0958395fe4dd53502e",
+  "Desinstalar.bat": "5131fda80ec64cc51f12e249b7edab9c40c971960d0693b2b71b8714ffe38064",
+  "desinstalar.ps1": "f7ecf462862dc2d51c8d7b0ddd77244120828164b5a4969b6f6f775badf5a52a",
+  "main.py": "25924566958f41f6092b5c0e606efcf7c71ad33641ada05e3440b0d6306563bc",
+  "requirements.txt": "ae9e88424c20c75f4583cac73e5b2fbefdbdda7cbcee8c4b990dfecd833323fe",
+  "mincloud/__init__.py": "944131e65c229d46f2f98365ef0f9514651c8dc89bb09f44bb3809d96ee872b5",
+  "mincloud/autostart.py": "8b2d18deb3bfccfc4f19ea22e548caf0e7b1f1a60c077ef277f9362b52cbd649",
+  "mincloud/config.py": "91ae0a53513d50a5f51f8706371ff14b0afec336f460672c4c3d78326e1a6ed9",
+  "mincloud/db.py": "f9dd876add02603e6ea4a09b5b9ae1b64a223f3e81594b7fa7b049689ec68a69",
+  "mincloud/drive_client.py": "7649a98e5260f1919791ed1efca0be3e7b8b3e6a66f8b54953e6b08ab43302a9",
+  "mincloud/github_update.py": "b719788aeeae0fdb264ea302a290f233c5c1acc91c20141a8eccca830e0bba76",
+  "mincloud/paquete.py": "1a50222821f60495538d8e191018ba8def4a6b2f9ce280b5f439700477f2b977",
+  "mincloud/safety.py": "3e3978adfa298eb25f4d3e6ad3986f6579784b4846888049731febb604f3d25b",
+  "mincloud/setup_wizard.py": "0e3324a94e8eab2b07854272896ce5a3f68ca3d97430af101a59fc5dad9c6088",
+  "mincloud/sync_engine.py": "df015259d3e4afdc88445c3d2bdd5c37dc3bf0f48aaa4ccf5ecc282ebd065550",
+  "mincloud/system_sync.py": "d3a8086da1fe9042b4a9199a18a8dfc79bc0b8dcf9cf7c551c937131bb35fb2f",
+  "mincloud/ui.py": "11b639fdbe2fd35ca25b985f79bc9b4f5acf2af9dad1eeb7bdbdcbedec0b3a88",
+  "mincloud/watcher.py": "7ed7a45cccf1f2937d96b057ac061ca1021c42baa79c9282480c1dd9b32c19fd"
+ },
+ "firma": "0a85ce03477bdc66e2cc91e48084f4c435a0fc8564f45df88acd5f912f2763be"
+}
