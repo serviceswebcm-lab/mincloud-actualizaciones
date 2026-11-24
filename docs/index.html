@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F6F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MinCloud">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>MinCloud</title>
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0BAMAAADP4xsBAAAAMFBMVEX////9/Pv37Ofw3dXw3NTpzMDdr53Zp5PWoYrSl3/GfF28ZkK7Yz67Yz23WjK0Uyphjg2sAAAC7klEQVR42u2asW7UQBCG5852iw7p6K9Jb6FQZw+S3hd4QB4AFNMHzg9A4T4U7gOSJWjQ+XwUO+vbtVfKrHeQUoybJL7k83rmn39m7SxO8L+OJQha0IIWtKAFLWhBC1rQgha0oAUtaEELWtCeY7sYjo++z7+cP38xf9UV+WQw+pPvZMmC7jznDg0L+kC83Ax077n5n0zi86TsGxN6PyuLJPTDNEYVE3qas67lQjcU0cxCnyaRvWezp3JGmRPR3/3XehmFVt7QYpmrKHTulQj+fMWAHpf6o/6yiUK/9ubxTv9pHoX+4y11LZC0jUL/diLglnkaJ75s5ZHIQS933UShF1pgXeUp823cqtvcU35fbfXMr8bcI5GSB/3OY9n6FhIVpxBIppaNZZ7E2lPqiMLOYhqJbrPNxLKxm7+KNtWpRO6A4nsEtHIEZ10lHr0bzzSdjs2igEiFwHrcaI+YxVVsGo0QjmWoQJ5etVndkMfP1Kb65G8s1QiN31xDdECMEh5CBUK4r9zNoxnac4hWCFy60xleIlEMAclwOqscgWcc05ORSOmUecKBNhK5d65wzTLzKTvIpksWLOhbuxscnXYci17bGzFsN+mGBW3cogYA+EEWCAWd5RYaQ33BNLoXVjcglzkNvbWMuuZFX54lYgaFggmdnlfd07NIQuPA0JeDrBMutKmPZjCnD2ybOzWob0/PIg39fth21GZQ4EJng1XX9l6BA52sUCKnmjgokNGpQjQ+rLhgfDqJ6LYjmzUZvcP22AcIhIjGWbr+ZceHB415a/b0MqeisdSr2m47TA+ZdeIete+9ZUWjRKoAgRDVDzd6XvgLALAsWFetV9CHrIaKtl2DGW173Rvm1xBq0uDZ0LeTWZ4Nfa7ATDGj0+As0tHFyKoY3yap0c6aEb3zaIUJbeJALfMAdAoQYtYhaLRsukACXgoW5K1XMFqFlXkI+oa89TKWJv9GL2hBC1rQgha0oAUtaEELWtCCFrSgnyP6H7tdrpmlQL3kAAAAAElFTkSuQmCC">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0BAMAAADP4xsBAAAAMFBMVEX////9/Pv37Ofw3dXw3NTpzMDdr53Zp5PWoYrSl3/GfF28ZkK7Yz67Yz23WjK0Uyphjg2sAAAC7klEQVR42u2asW7UQBCG5852iw7p6K9Jb6FQZw+S3hd4QB4AFNMHzg9A4T4U7gOSJWjQ+XwUO+vbtVfKrHeQUoybJL7k83rmn39m7SxO8L+OJQha0IIWtKAFLWhBC1rQgha0oAUtaEELWtCeY7sYjo++z7+cP38xf9UV+WQw+pPvZMmC7jznDg0L+kC83Ax077n5n0zi86TsGxN6PyuLJPTDNEYVE3qas67lQjcU0cxCnyaRvWezp3JGmRPR3/3XehmFVt7QYpmrKHTulQj+fMWAHpf6o/6yiUK/9ubxTv9pHoX+4y11LZC0jUL/diLglnkaJ75s5ZHIQS933UShF1pgXeUp823cqtvcU35fbfXMr8bcI5GSB/3OY9n6FhIVpxBIppaNZZ7E2lPqiMLOYhqJbrPNxLKxm7+KNtWpRO6A4nsEtHIEZ10lHr0bzzSdjs2igEiFwHrcaI+YxVVsGo0QjmWoQJ5etVndkMfP1Kb65G8s1QiN31xDdECMEh5CBUK4r9zNoxnac4hWCFy60xleIlEMAclwOqscgWcc05ORSOmUecKBNhK5d65wzTLzKTvIpksWLOhbuxscnXYci17bGzFsN+mGBW3cogYA+EEWCAWd5RYaQ33BNLoXVjcglzkNvbWMuuZFX54lYgaFggmdnlfd07NIQuPA0JeDrBMutKmPZjCnD2ybOzWob0/PIg39fth21GZQ4EJng1XX9l6BA52sUCKnmjgokNGpQjQ+rLhgfDqJ6LYjmzUZvcP22AcIhIjGWbr+ZceHB415a/b0MqeisdSr2m47TA+ZdeIete+9ZUWjRKoAgRDVDzd6XvgLALAsWFetV9CHrIaKtl2DGW173Rvm1xBq0uDZ0LeTWZ4Nfa7ATDGj0+As0tHFyKoY3yap0c6aEb3zaIUJbeJALfMAdAoQYtYhaLRsukACXgoW5K1XMFqFlXkI+oa89TKWJv9GL2hBC1rQgha0oAUtaEELWtCCFrSgnyP6H7tdrpmlQL3kAAAAAElFTkSuQmCC">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { --paper:#F7F6F3; --surface:#FFFFFF; --ink:#1A1A18; --second:#6B6A66; --muted:#A3A19B;
+        --line:#E3E1DB; --edge:#CFCDC6; --accent:#B4532A; --danger:#9B2C1F; --select:#ECEAE4; color-scheme: light; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { font: 16px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; min-height: 100vh;
+       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+main { max-width: 640px; margin: 0 auto; padding: 26px 22px 40px; }
+.mark { font-size: 11px; font-weight: 600; letter-spacing: .32em; }
+.sec { font-size: 11px; letter-spacing: .22em; color: var(--muted); text-transform: uppercase; }
+.top { display: flex; align-items: baseline; gap: 12px; }
+.top .who { margin-left: auto; font-size: 13px; color: var(--second); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+h1 { font-size: 30px; font-weight: 300; line-height: 1.15; margin: 22px 0 0; overflow-wrap: anywhere; }
+.rule { height: 1px; background: var(--line); margin: 18px 0; }
+.hint { color: var(--second); font-size: 14px; }
+.err { color: var(--danger); font-size: 14px; margin-top: 14px; }
+button, .btn { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--edge); border-radius: 2px;
+               padding: 11px 18px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+button.primary, .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--surface); font-weight: 600; padding: 15px 24px; width: 100%; }
+button.link { border: none; padding: 6px 0; color: var(--second); }
+button:disabled { color: var(--muted); }
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 14px; color: var(--second); min-height: 22px; }
+.crumbs button { border: none; padding: 0; color: var(--second); }
+.crumbs span { color: var(--muted); }
+input[type=search] { font: inherit; width: 100%; padding: 11px 12px; border: 1px solid var(--edge); border-radius: 2px;
+                     background: var(--surface); color: var(--ink); -webkit-appearance: none; appearance: none; outline: none; }
+input[type=search]:focus { border-color: var(--ink); }
+ul { list-style: none; margin: 0; padding: 0; }
+li { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+li:active { background: var(--select); }
+.tag { flex: 0 0 44px; font-size: 10px; letter-spacing: .08em; color: var(--second); border: 1px solid var(--edge); border-radius: 2px;
+       text-align: center; padding: 5px 0; text-transform: uppercase; }
+.tag.dir { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.what { flex: 1; min-width: 0; }
+.name { overflow-wrap: anywhere; }
+.meta { font-size: 12px; color: var(--second); margin-top: 2px; }
+.go { color: var(--muted); }
+.bar { height: 3px; background: var(--line); margin: 14px 0 8px; }
+.bar i { display: block; height: 3px; width: 0; background: var(--ink); }
+.foot { display: flex; justify-content: space-between; margin-top: 22px; }
+#viewer { display: none; }
+#viewer.on { display: block; }
+#viewer .in { max-width: 640px; margin: 0 auto;
+              padding: calc(18px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom)); }
+#viewer .head { display: flex; gap: 12px; align-items: flex-start; }
+#viewer .head div { flex: 1; min-width: 0; }
+#viewer .x { border: none; font-size: 26px; line-height: 1; padding: 0 4px; color: var(--second); }
+#stage img, #stage video { max-width: 100%; display: block; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); }
+#stage audio { width: 100%; }
+#stage pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.5 ui-monospace, Menlo, monospace; background: var(--surface);
+             border: 1px solid var(--line); padding: 14px; margin: 0; }
+.acts { display: grid; gap: 10px; margin-top: 18px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><span class="mark">MINCLOUD</span><span class="who" id="who"></span></div>
+
+  <section id="pLogin" hidden>
+    <h1>Tus archivos, donde estés</h1>
+    <div class="rule"></div>
+    <p class="hint">Entrá con la misma cuenta de Google que usa MinCloud en tus computadoras. Desde acá solo se pueden ver y abrir los archivos: no se modifica ni se borra nada.</p>
+    <p><button class="primary" id="bLogin">Entrar con Google</button></p>
+    <p class="hint">Si Google avisa que la app no está verificada: «Configuración avanzada» y después «Ir a MinCloud».</p>
+    <p class="err" id="eLogin"></p>
+  </section>
+
+  <section id="pFiles" hidden>
+    <h1 id="title">Carpetas</h1>
+    <div class="rule"></div>
+    <div class="crumbs" id="crumbs"></div>
+    <p><input type="search" id="find" placeholder="Buscar en esta carpeta" autocomplete="off"></p>
+    <div class="sec" id="count"></div>
+    <ul id="list"></ul>
+    <p class="hint" id="empty" hidden></p>
+    <p class="err" id="eFiles"></p>
+    <div class="foot">
+      <button class="link" id="bReload">Actualizar</button>
+      <button class="link" id="bLogout">Salir</button>
+    </div>
+  </section>
+
+  <p class="hint" style="margin-top:34px;font-size:12px"><a href="privacidad.html" style="color:inherit">Privacidad</a></p>
+</main>
+
+<div id="viewer"><div class="in">
+  <div class="head"><div><div class="sec" id="vKind"></div><h1 id="vName" style="font-size:22px;margin-top:8px"></h1>
+    <div class="meta" id="vMeta"></div></div><button class="x" id="vClose" aria-label="Cerrar">×</button></div>
+  <div class="bar" id="vBar"><i></i></div>
+  <div class="hint" id="vState"></div>
+  <div id="stage"></div>
+  <div class="acts" id="vActs" hidden>
+    <a class="btn primary" id="vOpen" target="_blank" rel="noopener">Abrir</a>
+    <button id="vShare" hidden>Compartir o abrir con otra app…</button>
+  </div>
+</div></div>
+
+<script>
+"use strict";
+const CLIENT_ID = "881356276626-gdqtpmq8e3c54n27fpc439upcrqaaigd.apps.googleusercontent.com";
+const SCOPE = "https://www.googleapis.com/auth/drive.file";
+const API = "https://www.googleapis.com/drive/v3/";
+const HERE = location.origin + location.pathname;
+const FOLDER = "application/vnd.google-apps.folder";
+const $ = id => document.getElementById(id);
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+};
+let token = null, path = [], cache = new Map(), current = [], blobUrl = null, job = 0, scrollBack = 0;
+
+/* ---------- sesión ---------- */
+function login() {
+  const state = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
+  store.set("mc_state", state);
+  const p = new URLSearchParams({ client_id: CLIENT_ID, redirect_uri: HERE, response_type: "token", scope: SCOPE, state });
+  const hint = store.get("mc_email");
+  if (hint) p.set("login_hint", hint);
+  location.href = "https://accounts.google.com/o/oauth2/v2/auth?" + p;
+}
+
+function readReturn() {
+  if (!location.hash || location.hash.length < 2) return "";
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (!h.has("access_token") && !h.has("error")) return "";
+  history.replaceState(null, "", HERE);            // el permiso no queda en la dirección ni en el historial
+  const expected = store.get("mc_state");
+  store.set("mc_state", null);
+  if (h.has("error")) return h.get("error") === "access_denied" ? "No se dio el permiso. Probá de nuevo." : "Google respondió: " + h.get("error");
+  if (!expected || h.get("state") !== expected) return "No se pudo confirmar el inicio de sesión. Probá de nuevo.";
+  store.set("mc_token", h.get("access_token"));
+  store.set("mc_until", String(Date.now() + (parseInt(h.get("expires_in"), 10) || 3600) * 1000 - 60000));
+  return "";
+}
+
+function savedToken() {
+  const t = store.get("mc_token"), until = parseInt(store.get("mc_until") || "0", 10);
+  return t && Date.now() < until ? t : null;
+}
+
+function logout(message) {
+  token = null; path = []; cache.clear();
+  store.set("mc_token", null); store.set("mc_until", null);
+  closeViewer();
+  $("pFiles").hidden = true; $("pLogin").hidden = false; $("who").textContent = "";
+  $("eLogin").textContent = message || "";
+}
+
+/* ---------- Drive ---------- */
+class Expired extends Error {}
+async function call(pathname, params, raw) {
+  const res = await fetch(API + pathname + "?" + new URLSearchParams(params), { headers: { Authorization: "Bearer " + token } });
+  if (res.status === 401) throw new Expired();
+  if (!res.ok) throw new Error(res.status === 403 ? "Google no permitió la operación (403)." : "Error " + res.status + " al hablar con Google.");
+  return raw ? res : res.json();
+}
+
+async function listAll(q) {
+  const out = []; let pageToken = "";
+  do {
+    const p = { q, pageSize: "1000", spaces: "drive", orderBy: "folder,name_natural",
+                fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime,appProperties)" };
+    if (pageToken) p.pageToken = pageToken;
+    const r = await call("files", p);
+    out.push(...(r.files || [])); pageToken = r.nextPageToken || "";
+  } while (pageToken);
+  return out;
+}
+
+function visible(files, atRoot) {
+  return files.filter(f => !(f.appProperties && f.appProperties.mc_deleted_at) && !(atRoot && f.name.startsWith("_")))
+    .sort((a, b) => (b.mimeType === FOLDER) - (a.mimeType === FOLDER) || a.name.localeCompare(b.name, "es", { numeric: true, sensitivity: "base" }));
+}
+
+/* ---------- pantalla de archivos ---------- */
+function size(n) {
+  n = Number(n || 0);
+  if (!n) return "";
+  const u = ["B", "KB", "MB", "GB"]; let i = 0;
+  while (n >= 1024 && i < 3) { n /= 1024; i++; }
+  return (i ? n.toFixed(1).replace(".", ",") : String(n)) + " " + u[i];
+}
+function when(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+function ext(name) {
+  const i = name.lastIndexOf(".");
+  return i > 0 && name.length - i <= 6 ? name.slice(i + 1) : "···";
+}
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function draw() {
+  const needle = $("find").value.trim().toLocaleLowerCase("es");
+  const rows = needle ? current.filter(f => f.name.toLocaleLowerCase("es").includes(needle)) : current;
+  const list = $("list"); list.textContent = "";
+  for (const f of rows) {
+    const dir = f.mimeType === FOLDER, li = el("li");
+    li.append(el("span", "tag" + (dir ? " dir" : ""), dir ? "carp" : ext(f.name).slice(0, 4)));
+    const what = el("div", "what");
+    what.append(el("div", "name", f.name), el("div", "meta", dir ? "Carpeta" : [when(f.modifiedTime), size(f.size)].filter(Boolean).join("  ·  ")));
+    li.append(what, el("span", "go", dir ? "›" : ""));
+    li.addEventListener("click", () => dir ? enter(f) : openFile(f));
+    list.append(li);
+  }
+  const folders = rows.filter(f => f.mimeType === FOLDER).length, files = rows.length - folders;
+  $("count").textContent = [folders ? folders + (folders === 1 ? " carpeta" : " carpetas") : "", files ? files + (files === 1 ? " archivo" : " archivos") : ""]
+    .filter(Boolean).join("  ·  ");
+  $("empty").hidden = rows.length > 0;
+  $("empty").textContent = needle ? "Nada coincide con la búsqueda." : "Esta carpeta está vacía.";
+  $("title").textContent = path.length > 1 ? path[path.length - 1].name : "Carpetas";
+  const crumbs = $("crumbs"); crumbs.textContent = "";
+  path.forEach((p, i) => {
+    if (i) crumbs.append(el("span", "", "/"));
+    if (i === path.length - 1) { crumbs.append(el("span", "", i ? p.name : "Inicio")); return; }
+    const b = el("button", "", i ? p.name : "Inicio");
+    b.addEventListener("click", () => jump(i));
+    crumbs.append(b);
+  });
+}
+
+async function show(force) {
+  const here = path[path.length - 1], mine = ++job;
+  $("eFiles").textContent = "";
+  if (force) cache.delete(here.id);
+  if (!cache.has(here.id)) {
+    current = []; draw(); $("empty").hidden = false; $("empty").textContent = "Cargando…";
+    try {
+      const files = await listAll("'" + here.id + "' in parents and trashed = false");
+      cache.set(here.id, visible(files, path.length === 1));
+    } catch (e) { if (mine === job) fail(e); return; }
+  }
+  if (mine !== job) return;                         // mientras cargaba se abrió otra carpeta
+  current = cache.get(here.id); draw();
+}
+
+function fail(e) {
+  if (e instanceof Expired) { logout("La sesión venció (dura una hora). Entrá de nuevo."); return; }
+  $("empty").hidden = true;
+  $("eFiles").textContent = (e && e.message) || "No se pudo cargar. Revisá la conexión y tocá «Actualizar».";
+}
+
+function enter(folder) {
+  path.push({ id: folder.id, name: folder.name });
+  $("find").value = "";
+  history.pushState({ depth: path.length }, "");
+  window.scrollTo(0, 0);
+  show();
+}
+function jump(index) {
+  const back = path.length - 1 - index;
+  if (back > 0) history.go(-back);                  // el botón «atrás» del teléfono hace lo mismo
+}
+window.addEventListener("popstate", e => {
+  if ($("viewer").classList.contains("on")) { closeViewer(true); return; }
+  const depth = Math.max(1, (e.state && e.state.depth) || 1);
+  if (!token || depth >= path.length) return;
+  path.length = depth; $("find").value = ""; show();
+});
+
+async function start() {
+  $("pLogin").hidden = true; $("pFiles").hidden = false;
+  try {
+    const me = await call("about", { fields: "user(emailAddress)" });
+    const email = (me.user && me.user.emailAddress) || "";
+    $("who").textContent = email; store.set("mc_email", email || null);
+    const roots = await listAll("name = 'MinCloud' and mimeType = '" + FOLDER + "' and 'root' in parents and trashed = false");
+    if (!roots.length) {
+      $("eFiles").textContent = "En esta cuenta no aparece la carpeta de MinCloud. Fijate que sea la misma cuenta de Google que usan las computadoras.";
+      return;
+    }
+    path = [{ id: roots[0].id, name: "MinCloud" }];
+    history.replaceState({ depth: 1 }, "");
+    await show();
+  } catch (e) { fail(e); }
+}
+
+/* ---------- visor ---------- */
+function closeViewer(fromBack) {
+  const v = $("viewer");
+  if (!v.classList.contains("on")) return;
+  job++;                                            // corta una descarga en curso
+  v.classList.remove("on");
+  document.querySelector("main").hidden = false;
+  window.scrollTo(0, scrollBack);
+  $("stage").textContent = "";
+  if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+  if (!fromBack) history.back();
+}
+
+async function openFile(f) {
+  const mine = ++job, total = Number(f.size || 0);
+  if (total > 400 * 1024 * 1024 && !confirm("Pesa " + size(total) + ". ¿Descargarlo igual?")) return;
+  history.pushState({ depth: path.length, view: true }, "");
+  scrollBack = window.scrollY;
+  document.querySelector("main").hidden = true;
+  $("viewer").classList.add("on"); window.scrollTo(0, 0);
+  $("vKind").textContent = ext(f.name) === "···" ? "Archivo" : "Archivo " + ext(f.name);
+  $("vName").textContent = f.name;
+  $("vMeta").textContent = [when(f.modifiedTime), size(total)].filter(Boolean).join("  ·  ");
+  $("vActs").hidden = true; $("vShare").hidden = true; $("stage").textContent = "";
+  const bar = $("vBar").firstElementChild; bar.style.width = "0"; $("vBar").hidden = false;
+  $("vState").textContent = "Descargando…";
+  try {
+    const res = await call("files/" + encodeURIComponent(f.id), { alt: "media" }, true);
+    const reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (mine !== job) { reader.cancel(); return; }
+      if (done) break;
+      parts.push(value); got += value.length;
+      if (total) { bar.style.width = Math.min(100, got * 100 / total) + "%"; $("vState").textContent = "Descargando… " + size(got) + " de " + size(total); }
+    }
+    const mime = f.mimeType || "application/octet-stream", blob = new Blob(parts, { type: mime });
+    blobUrl = URL.createObjectURL(blob);
+    $("vBar").hidden = true; $("vState").textContent = "";
+    const stage = $("stage");
+    if (mime.startsWith("image/")) { const i = el("img"); i.src = blobUrl; i.alt = f.name; stage.append(i); }
+    else if (mime.startsWith("video/")) { const v = el("video"); v.src = blobUrl; v.controls = true; v.playsInline = true; stage.append(v); }
+    else if (mime.startsWith("audio/")) { const a = el("audio"); a.src = blobUrl; a.controls = true; stage.append(a); }
+    else if ((mime.startsWith("text/") || mime === "application/json") && blob.size < 1048576) stage.append(el("pre", "", await blob.text()));
+    else $("vState").textContent = mime === "application/pdf" ? "Listo. Tocá «Abrir» para leerlo." : "Listo. Tocá «Abrir», o elegí con qué app verlo.";
+    const open = $("vOpen"); open.href = blobUrl; open.textContent = "Abrir";
+    $("vActs").hidden = false;
+    const file = new File([blob], f.name, { type: mime });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      $("vShare").hidden = false;
+      $("vShare").onclick = () => navigator.share({ files: [file], title: f.name }).catch(() => {});
+    }
+  } catch (e) {
+    if (mine !== job) return;
+    if (e instanceof Expired) { logout("La sesión venció (dura una hora). Entrá de nuevo."); return; }
+    $("vBar").hidden = true; $("vState").textContent = "No se pudo descargar. " + ((e && e.message) || "");
+  }
+}
+
+/* ---------- arranque ---------- */
+$("bLogin").addEventListener("click", login);
+$("bLogout").addEventListener("click", () => logout(""));
+$("bReload").addEventListener("click", () => token && path.length && show(true));
+$("vClose").addEventListener("click", () => closeViewer(false));
+$("find").addEventListener("input", draw);
+
+const problem = readReturn();
+token = savedToken();
+if (token) start(); else logout(problem);
+</script>
+</body>
+</html>
