@@ -172,7 +172,8 @@ const store = {
 };
 let token = null, path = [], cache = new Map(), current = [], blobUrl = null, job = 0, scrollBack = 0;
 let grid = store.get("mc_view") !== "list";
-const minis = new Map();                            // archivo+versión -> dirección de la miniatura ("" = no tiene)
+const minis = new Map();                            // archivo+versión -> dirección de la miniatura ("" = no tiene). Solo en memoria.
+const MINIS_MAX = 400;                              // tope en memoria: se sueltan las más viejas
 const FOLDER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6h6.6l2 2.6h10.4V19h-19z"/></svg>';
 
 /* ---------- sesión ---------- */
@@ -212,10 +213,7 @@ function forgetMinis() {
 function logout(message, wipe) {
   token = null; path = []; cache.clear(); forgetMinis();
   store.set("mc_token", null); store.set("mc_until", null);
-  if (wipe) {                                       // «Salir»: no queda nada de los archivos en el teléfono
-    store.set("mc_email", null);
-    try { caches.delete("mc-mini"); } catch (e) {}
-  }
+  if (wipe) store.set("mc_email", null);            // «Salir»: no queda ni el correo
   closeViewer();
   $("pFiles").hidden = true; $("pLogin").hidden = false; $("who").textContent = "";
   $("eLogin").textContent = message || "";
@@ -278,23 +276,9 @@ function el(tag, cls, text) {
 }
 
 /* ---------- miniaturas ----------
-   Orden: lo guardado en el teléfono → la miniatura que hace Google → dibujarla acá (fotos y PDF chicos).
-   Lo que se dibuja o se baja queda guardado en el teléfono: la próxima vez aparece al instante. */
+   Son temporales: viven en la memoria mientras la página está abierta y no se guardan en el teléfono.
+   Orden: la miniatura que hace Google → dibujarla acá (fotos y PDF chicos). */
 const miniKey = f => f.id + "@" + (f.modifiedTime || "");
-const miniReq = f => new Request(new URL("mini/" + encodeURIComponent(f.id) + "?v=" + encodeURIComponent(f.modifiedTime || ""), HERE).href);
-
-async function miniCache() { try { return await caches.open("mc-mini"); } catch (e) { return null; } }
-async function miniGet(f) {
-  const c = await miniCache(); if (!c) return null;
-  try { const r = await c.match(miniReq(f)); return r ? await r.blob() : null; } catch (e) { return null; }
-}
-async function miniPut(f, blob) {
-  const c = await miniCache(); if (!c || !blob) return;
-  try {
-    await c.delete(miniReq(f), { ignoreSearch: true });   // la versión anterior del mismo archivo
-    await c.put(miniReq(f), new Response(blob, { headers: { "Content-Type": blob.type || "image/jpeg" } }));
-  } catch (e) {}
-}
 
 const toJpeg = canvas => new Promise(ok => canvas.toBlob(ok, "image/jpeg", 0.72));
 function canvasFor(w, h) {
@@ -344,20 +328,25 @@ const drawMini = (k, blob) => k === "img" ? imageMini(blob) : k === "pdf" ? pdfM
 function remember(f, blob) {
   const key = miniKey(f), old = minis.get(key);
   if (old && old.startsWith("blob:")) URL.revokeObjectURL(old);
+  minis.delete(key);
   const url = blob ? URL.createObjectURL(blob) : "";
   minis.set(key, url);
+  while (minis.size > MINIS_MAX) {                  // se suelta la más vieja
+    const [k, u] = minis.entries().next().value;
+    if (u.startsWith("blob:")) URL.revokeObjectURL(u);
+    minis.delete(k);
+  }
   return url;
 }
 
 async function findMini(f) {
   const k = kind(f);
-  let blob = await miniGet(f);
-  if (blob) return remember(f, blob);
+  let blob = null;
   if (f.thumbnailLink) {
     try {
       const r = await fetch(f.thumbnailLink.replace(/=s\d+$/, "=s" + MINI), { headers: { Authorization: "Bearer " + token } });
       if (r.ok && (r.headers.get("Content-Type") || "").startsWith("image/")) {
-        blob = await r.blob(); miniPut(f, blob); return remember(f, blob);
+        blob = await r.blob(); return remember(f, blob);
       }
     } catch (e) {}
   }
@@ -365,10 +354,10 @@ async function findMini(f) {
     try {
       const raw = await (await call("files/" + encodeURIComponent(f.id), { alt: "media" }, true)).blob();
       blob = await drawMini(k, raw);
-      if (blob) { miniPut(f, blob); return remember(f, blob); }
+      if (blob) return remember(f, blob);
     } catch (e) { if (e instanceof Expired) throw e; }
   }
-  if (f.thumbnailLink) return f.thumbnailLink.replace(/=s\d+$/, "=s" + MINI);   // última opción: sin guardar
+  if (f.thumbnailLink) return f.thumbnailLink.replace(/=s\d+$/, "=s" + MINI);   // última opción: la carga el navegador
   return remember(f, null);
 }
 
@@ -498,8 +487,7 @@ async function start() {
   try {
     const me = await call("about", { fields: "user(emailAddress)" });
     const email = (me.user && me.user.emailAddress) || "";
-    const before = store.get("mc_email");
-    if (before && email && before !== email) { forgetMinis(); try { await caches.delete("mc-mini"); } catch (e) {} }
+    if (store.get("mc_email") && email && store.get("mc_email") !== email) forgetMinis();
     $("who").textContent = email; store.set("mc_email", email || null);
     const roots = await listAll("name = 'MinCloud' and mimeType = '" + FOLDER + "' and 'root' in parents and trashed = false");
     if (!roots.length) {
@@ -585,9 +573,9 @@ async function fetchFile(f, k) {
     $("vOpen").hidden = !k && canShare;             // si no se puede compartir, queda «Abrir» para bajarlo
     if (!k) $("vOpen").textContent = "Descargar";
     else $("vOpen").textContent = "Abrir";
-    // Ya está bajado: si no tenía miniatura, se hace ahora y queda guardada para la próxima.
+    // Ya está bajado: si no tenía miniatura, se hace ahora (en memoria) para cuando vuelva a la carpeta.
     if ((k === "img" || k === "pdf") && !(known && known.startsWith("blob:")) && blob.size <= 40 * 1048576) {
-      drawMini(k, blob).then(m => { if (m) { miniPut(f, m); remember(f, m); } }).catch(() => {});
+      drawMini(k, blob).then(m => { if (m) remember(f, m); }).catch(() => {});
     }
   } catch (e) {
     if (mine !== job) return;
@@ -604,6 +592,7 @@ $("vClose").addEventListener("click", () => closeViewer(false));
 $("find").addEventListener("input", draw);
 $("bMode").addEventListener("click", () => { grid = !grid; store.set("mc_view", grid ? "grid" : "list"); draw(); });
 
+try { caches.delete("mc-mini"); } catch (e) {}        // versión anterior: guardaba miniaturas; se borran
 const problem = readReturn();
 token = savedToken();
 if (token) start(); else logout(problem);
