@@ -50,6 +50,18 @@ li:active { background: var(--select); }
 .name { overflow-wrap: anywhere; }
 .meta { font-size: 12px; color: var(--second); margin-top: 2px; }
 .go { color: var(--muted); }
+ul.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 20px 12px; margin-top: 14px; }
+ul.grid li { display: block; padding: 0; border: none; text-align: center; min-width: 0; }
+ul.grid li:active { background: none; opacity: .55; }
+.thumb { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); overflow: hidden;
+         display: flex; align-items: center; justify-content: center; }
+.thumb.dir { border-color: transparent; background: transparent; color: var(--ink); }
+.thumb svg { width: 62%; height: 62%; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .ext { font-size: 13px; letter-spacing: .1em; color: var(--second); text-transform: uppercase; }
+ul.grid .name { font-size: 12px; line-height: 1.3; margin-top: 7px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bar2 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.bar2 button { font-size: 13px; padding: 0; }
 .bar { height: 3px; background: var(--line); margin: 14px 0 8px; }
 .bar i { display: block; height: 3px; width: 0; background: var(--ink); }
 .foot { display: flex; justify-content: space-between; margin-top: 22px; }
@@ -86,7 +98,7 @@ li:active { background: var(--select); }
     <div class="rule"></div>
     <div class="crumbs" id="crumbs"></div>
     <p><input type="search" id="find" placeholder="Buscar en esta carpeta" autocomplete="off"></p>
-    <div class="sec" id="count"></div>
+    <div class="bar2"><div class="sec" id="count"></div><button class="link" id="bMode"></button></div>
     <ul id="list"></ul>
     <p class="hint" id="empty" hidden></p>
     <p class="err" id="eFiles"></p>
@@ -125,6 +137,9 @@ const store = {
   set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
 };
 let token = null, path = [], cache = new Map(), current = [], blobUrl = null, job = 0, scrollBack = 0;
+let grid = store.get("mc_view") !== "list";
+const thumbs = new Map();                           // id del archivo -> dirección de su miniatura ("" si no tiene)
+const FOLDER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6h6.6l2 2.6h10.4V19h-19z"/></svg>';
 
 /* ---------- sesión ---------- */
 function login() {
@@ -157,6 +172,7 @@ function savedToken() {
 
 function logout(message) {
   token = null; path = []; cache.clear();
+  thumbs.forEach(u => u.startsWith("blob:") && URL.revokeObjectURL(u)); thumbs.clear();
   store.set("mc_token", null); store.set("mc_until", null);
   closeViewer();
   $("pFiles").hidden = true; $("pLogin").hidden = false; $("who").textContent = "";
@@ -176,7 +192,7 @@ async function listAll(q) {
   const out = []; let pageToken = "";
   do {
     const p = { q, pageSize: "1000", spaces: "drive", orderBy: "folder,name_natural",
-                fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime,appProperties)" };
+                fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime,appProperties,thumbnailLink)" };
     if (pageToken) p.pageToken = pageToken;
     const r = await call("files", p);
     out.push(...(r.files || [])); pageToken = r.nextPageToken || "";
@@ -212,16 +228,62 @@ function el(tag, cls, text) {
   return e;
 }
 
+/* Miniaturas: se piden de a pocas y solo las que están por verse. Si Google no las entrega, queda el rótulo del tipo. */
+const waiting = []; let busy = 0;
+const watcher = "IntersectionObserver" in window ? new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting) { watcher.unobserve(e.target); loadThumb(e.target); }
+}), { rootMargin: "300px" }) : null;
+function loadThumb(box) { waiting.push(box); pump(); }
+function pump() {
+  while (busy < 4 && waiting.length) { busy++; fetchThumb(waiting.shift()).catch(() => {}).finally(() => { busy--; pump(); }); }
+}
+async function fetchThumb(box) {
+  const id = box.dataset.id; let url = thumbs.get(id);
+  if (url === undefined) {
+    try {
+      const r = await fetch(box.dataset.link, { headers: { Authorization: "Bearer " + token } });
+      if (!r.ok) throw new Error();
+      url = URL.createObjectURL(await r.blob());
+    } catch (e) { url = box.dataset.link; }         // por esa vía no: se prueba cargándola directo
+    thumbs.set(id, url);
+  }
+  if (!url || !box.isConnected) return;
+  const img = new Image();
+  img.alt = "";
+  img.onload = () => { box.textContent = ""; box.append(img); };
+  img.onerror = () => thumbs.set(id, "");
+  img.src = url;
+}
+
+function tile(f, dir) {
+  const li = el("li"), box = el("div", "thumb" + (dir ? " dir" : ""));
+  if (dir) box.innerHTML = FOLDER_SVG;
+  else {
+    box.append(el("span", "ext", ext(f.name).slice(0, 5)));
+    if (f.thumbnailLink && thumbs.get(f.id) !== "") {
+      box.dataset.id = f.id; box.dataset.link = f.thumbnailLink.replace(/=s\d+$/, "=s320");
+      watcher ? watcher.observe(box) : loadThumb(box);
+    }
+  }
+  li.append(box, el("div", "name", f.name));
+  return li;
+}
+
 function draw() {
   const needle = $("find").value.trim().toLocaleLowerCase("es");
   const rows = needle ? current.filter(f => f.name.toLocaleLowerCase("es").includes(needle)) : current;
-  const list = $("list"); list.textContent = "";
+  const list = $("list"); list.textContent = ""; list.className = grid ? "grid" : "";
+  $("bMode").textContent = grid ? "Ver como lista" : "Ver como íconos";
+  if (watcher) watcher.disconnect();
+  waiting.length = 0;
   for (const f of rows) {
-    const dir = f.mimeType === FOLDER, li = el("li");
-    li.append(el("span", "tag" + (dir ? " dir" : ""), dir ? "carp" : ext(f.name).slice(0, 4)));
-    const what = el("div", "what");
-    what.append(el("div", "name", f.name), el("div", "meta", dir ? "Carpeta" : [when(f.modifiedTime), size(f.size)].filter(Boolean).join("  ·  ")));
-    li.append(what, el("span", "go", dir ? "›" : ""));
+    const dir = f.mimeType === FOLDER, li = grid ? tile(f, dir) : el("li");
+    if (!grid) {
+      li.append(el("span", "tag" + (dir ? " dir" : ""), dir ? "carp" : ext(f.name).slice(0, 4)));
+      const what = el("div", "what");
+      what.append(el("div", "name", f.name), el("div", "meta", dir ? "Carpeta" : [when(f.modifiedTime), size(f.size)].filter(Boolean).join("  ·  ")));
+      li.append(what, el("span", "go", dir ? "›" : ""));
+    }
     li.addEventListener("click", () => dir ? enter(f) : openFile(f));
     list.append(li);
   }
@@ -362,6 +424,7 @@ $("bLogout").addEventListener("click", () => logout(""));
 $("bReload").addEventListener("click", () => token && path.length && show(true));
 $("vClose").addEventListener("click", () => closeViewer(false));
 $("find").addEventListener("input", draw);
+$("bMode").addEventListener("click", () => { grid = !grid; store.set("mc_view", grid ? "grid" : "list"); draw(); });
 
 const problem = readReturn();
 token = savedToken();
