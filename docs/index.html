@@ -46,6 +46,7 @@ li:active { background: var(--select); }
 .tag { flex: 0 0 44px; font-size: 10px; letter-spacing: .08em; color: var(--second); border: 1px solid var(--edge); border-radius: 2px;
        text-align: center; padding: 5px 0; text-transform: uppercase; }
 .tag.dir { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.tag.no { border-style: dashed; color: var(--muted); }
 .what { flex: 1; min-width: 0; }
 .name { overflow-wrap: anywhere; }
 .meta { font-size: 12px; color: var(--second); margin-top: 2px; }
@@ -53,15 +54,23 @@ li:active { background: var(--select); }
 ul.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 20px 12px; margin-top: 14px; }
 ul.grid li { display: block; padding: 0; border: none; text-align: center; min-width: 0; }
 ul.grid li:active { background: none; opacity: .55; }
-.thumb { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); overflow: hidden;
-         display: flex; align-items: center; justify-content: center; }
+.thumb { position: relative; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); overflow: hidden;
+         display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center; }
 .thumb.dir { border-color: transparent; background: transparent; color: var(--ink); }
+.thumb.no { background: transparent; border: 1px dashed var(--edge); }
 .thumb svg { width: 62%; height: 62%; }
-.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb .ext { font-size: 13px; letter-spacing: .1em; color: var(--second); text-transform: uppercase; }
+.thumb.no .ext { color: var(--muted); }
+.thumb .nope { font-size: 9px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.thumb .kind { position: absolute; left: 5px; bottom: 5px; z-index: 1; font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+               background: rgba(255,255,255,.9); color: var(--second); padding: 2px 4px; border-radius: 1px; }
 ul.grid .name { font-size: 12px; line-height: 1.3; margin-top: 7px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+ul.grid li.off .name { color: var(--second); }
 .bar2 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .bar2 button { font-size: 13px; padding: 0; }
+.legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--second); margin-top: 8px; }
+.legend i { flex: 0 0 14px; height: 14px; border: 1px dashed var(--edge); border-radius: 1px; }
 .bar { height: 3px; background: var(--line); margin: 14px 0 8px; }
 .bar i { display: block; height: 3px; width: 0; background: var(--ink); }
 .foot { display: flex; justify-content: space-between; margin-top: 22px; }
@@ -71,8 +80,10 @@ ul.grid .name { font-size: 12px; line-height: 1.3; margin-top: 7px; display: -we
               padding: calc(18px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom)); }
 #viewer .head { display: flex; gap: 12px; align-items: flex-start; }
 #viewer .head div { flex: 1; min-width: 0; }
+#vState { margin-top: 14px; }
 #viewer .x { border: none; font-size: 26px; line-height: 1; padding: 0 4px; color: var(--second); }
 #stage img, #stage video { max-width: 100%; display: block; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); }
+#stage img.ph { width: 100%; opacity: .55; filter: blur(1px); }
 #stage audio { width: 100%; }
 #stage pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.5 ui-monospace, Menlo, monospace; background: var(--surface);
              border: 1px solid var(--line); padding: 14px; margin: 0; }
@@ -99,6 +110,7 @@ ul.grid .name { font-size: 12px; line-height: 1.3; margin-top: 7px; display: -we
     <div class="crumbs" id="crumbs"></div>
     <p><input type="search" id="find" placeholder="Buscar en esta carpeta" autocomplete="off"></p>
     <div class="bar2"><div class="sec" id="count"></div><button class="link" id="bMode"></button></div>
+    <div class="legend" id="legend" hidden><i></i><span>Punteados: no se abren en el iPhone</span></div>
     <ul id="list"></ul>
     <p class="hint" id="empty" hidden></p>
     <p class="err" id="eFiles"></p>
@@ -118,6 +130,7 @@ ul.grid .name { font-size: 12px; line-height: 1.3; margin-top: 7px; display: -we
   <div class="hint" id="vState"></div>
   <div id="stage"></div>
   <div class="acts" id="vActs" hidden>
+    <button class="primary" id="vGet" hidden>Descargar para abrir con otra app</button>
     <a class="btn primary" id="vOpen" target="_blank" rel="noopener">Abrir</a>
     <button id="vShare" hidden>Compartir o abrir con otra app…</button>
   </div>
@@ -132,13 +145,34 @@ const HERE = location.origin + location.pathname;
 const FOLDER = "application/vnd.google-apps.folder";
 const $ = id => document.getElementById(id);
 
+/* Lector de PDF (solo para dibujar miniaturas). Se verifica que sea exactamente la versión revisada. */
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+const PDFJS_SRI = "sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e";
+const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+const PDFJS_WORKER_SRI = "sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2";
+
+/* Qué abre el iPhone por sí solo (Safari y la vista previa de iOS). El resto necesita otra app. */
+const OPENS = {
+  img: "jpg jpeg png gif webp heic heif bmp tif tiff",
+  pdf: "pdf",
+  video: "mp4 mov m4v",
+  audio: "mp3 m4a aac wav",
+  text: "txt csv md json",
+  doc: "doc docx xls xlsx ppt pptx pages numbers key rtf",
+  ar: "usdz",
+};
+const KIND_OF = {};
+for (const k in OPENS) OPENS[k].split(" ").forEach(e => KIND_OF[e] = k);
+const MINI = 300;                                   // lado de la miniatura en píxeles
+const GEN_LIMIT = { img: 8 * 1048576, pdf: 10 * 1048576 };   // tope para bajar un archivo solo para su miniatura
+
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
 };
 let token = null, path = [], cache = new Map(), current = [], blobUrl = null, job = 0, scrollBack = 0;
 let grid = store.get("mc_view") !== "list";
-const thumbs = new Map();                           // id del archivo -> dirección de su miniatura ("" si no tiene)
+const minis = new Map();                            // archivo+versión -> dirección de la miniatura ("" = no tiene)
 const FOLDER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6h6.6l2 2.6h10.4V19h-19z"/></svg>';
 
 /* ---------- sesión ---------- */
@@ -170,10 +204,18 @@ function savedToken() {
   return t && Date.now() < until ? t : null;
 }
 
-function logout(message) {
-  token = null; path = []; cache.clear();
-  thumbs.forEach(u => u.startsWith("blob:") && URL.revokeObjectURL(u)); thumbs.clear();
+function forgetMinis() {
+  minis.forEach(u => u.startsWith("blob:") && URL.revokeObjectURL(u));
+  minis.clear();
+}
+
+function logout(message, wipe) {
+  token = null; path = []; cache.clear(); forgetMinis();
   store.set("mc_token", null); store.set("mc_until", null);
+  if (wipe) {                                       // «Salir»: no queda nada de los archivos en el teléfono
+    store.set("mc_email", null);
+    try { caches.delete("mc-mini"); } catch (e) {}
+  }
   closeViewer();
   $("pFiles").hidden = true; $("pLogin").hidden = false; $("who").textContent = "";
   $("eLogin").textContent = message || "";
@@ -205,7 +247,7 @@ function visible(files, atRoot) {
     .sort((a, b) => (b.mimeType === FOLDER) - (a.mimeType === FOLDER) || a.name.localeCompare(b.name, "es", { numeric: true, sensitivity: "base" }));
 }
 
-/* ---------- pantalla de archivos ---------- */
+/* ---------- tipos ---------- */
 function size(n) {
   n = Number(n || 0);
   if (!n) return "";
@@ -221,6 +263,13 @@ function ext(name) {
   const i = name.lastIndexOf(".");
   return i > 0 && name.length - i <= 6 ? name.slice(i + 1) : "···";
 }
+function kind(f) {
+  const k = KIND_OF[ext(f.name).toLowerCase()];
+  if (k) return k;
+  const m = f.mimeType || "";
+  return m.startsWith("image/") ? "img" : m === "application/pdf" ? "pdf" : m.startsWith("video/") ? "video"
+       : m.startsWith("audio/") ? "audio" : m.startsWith("text/") ? "text" : "";
+}
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -228,47 +277,144 @@ function el(tag, cls, text) {
   return e;
 }
 
-/* Miniaturas: se piden de a pocas y solo las que están por verse. Si Google no las entrega, queda el rótulo del tipo. */
+/* ---------- miniaturas ----------
+   Orden: lo guardado en el teléfono → la miniatura que hace Google → dibujarla acá (fotos y PDF chicos).
+   Lo que se dibuja o se baja queda guardado en el teléfono: la próxima vez aparece al instante. */
+const miniKey = f => f.id + "@" + (f.modifiedTime || "");
+const miniReq = f => new Request(new URL("mini/" + encodeURIComponent(f.id) + "?v=" + encodeURIComponent(f.modifiedTime || ""), HERE).href);
+
+async function miniCache() { try { return await caches.open("mc-mini"); } catch (e) { return null; } }
+async function miniGet(f) {
+  const c = await miniCache(); if (!c) return null;
+  try { const r = await c.match(miniReq(f)); return r ? await r.blob() : null; } catch (e) { return null; }
+}
+async function miniPut(f, blob) {
+  const c = await miniCache(); if (!c || !blob) return;
+  try {
+    await c.delete(miniReq(f), { ignoreSearch: true });   // la versión anterior del mismo archivo
+    await c.put(miniReq(f), new Response(blob, { headers: { "Content-Type": blob.type || "image/jpeg" } }));
+  } catch (e) {}
+}
+
+const toJpeg = canvas => new Promise(ok => canvas.toBlob(ok, "image/jpeg", 0.72));
+function canvasFor(w, h) {
+  const s = Math.min(1, MINI / Math.max(w, h)), c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+  return { c, s };
+}
+async function imageMini(blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = url; });
+    const { c } = canvasFor(img.naturalWidth, img.naturalHeight);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await toJpeg(c);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+let pdfLib = null;
+function loadPdf() {
+  if (!pdfLib) pdfLib = (async () => {
+    await new Promise((ok, bad) => {
+      const s = document.createElement("script");
+      s.src = PDFJS; s.integrity = PDFJS_SRI; s.crossOrigin = "anonymous"; s.onload = ok; s.onerror = bad;
+      document.head.append(s);
+    });
+    const code = await (await fetch(PDFJS_WORKER, { credentials: "omit" })).arrayBuffer();
+    const sum = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest("SHA-384", code))));
+    if ("sha384-" + sum !== PDFJS_WORKER_SRI) throw new Error("lector de PDF alterado");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+    return window.pdfjsLib;
+  })();
+  return pdfLib;
+}
+async function pdfMini(blob) {
+  const lib = await loadPdf();
+  const doc = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+  try {
+    const page = await doc.getPage(1), base = page.getViewport({ scale: 1 });
+    const { c, s } = canvasFor(base.width, base.height), ctx = c.getContext("2d");
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: s }) }).promise;
+    return await toJpeg(c);
+  } finally { doc.destroy(); }
+}
+const drawMini = (k, blob) => k === "img" ? imageMini(blob) : k === "pdf" ? pdfMini(blob) : Promise.resolve(null);
+
+function remember(f, blob) {
+  const key = miniKey(f), old = minis.get(key);
+  if (old && old.startsWith("blob:")) URL.revokeObjectURL(old);
+  const url = blob ? URL.createObjectURL(blob) : "";
+  minis.set(key, url);
+  return url;
+}
+
+async function findMini(f) {
+  const k = kind(f);
+  let blob = await miniGet(f);
+  if (blob) return remember(f, blob);
+  if (f.thumbnailLink) {
+    try {
+      const r = await fetch(f.thumbnailLink.replace(/=s\d+$/, "=s" + MINI), { headers: { Authorization: "Bearer " + token } });
+      if (r.ok && (r.headers.get("Content-Type") || "").startsWith("image/")) {
+        blob = await r.blob(); miniPut(f, blob); return remember(f, blob);
+      }
+    } catch (e) {}
+  }
+  if (GEN_LIMIT[k] && Number(f.size || 0) <= GEN_LIMIT[k]) {
+    try {
+      const raw = await (await call("files/" + encodeURIComponent(f.id), { alt: "media" }, true)).blob();
+      blob = await drawMini(k, raw);
+      if (blob) { miniPut(f, blob); return remember(f, blob); }
+    } catch (e) { if (e instanceof Expired) throw e; }
+  }
+  if (f.thumbnailLink) return f.thumbnailLink.replace(/=s\d+$/, "=s" + MINI);   // última opción: sin guardar
+  return remember(f, null);
+}
+
 const waiting = []; let busy = 0;
 const watcher = "IntersectionObserver" in window ? new IntersectionObserver(entries => entries.forEach(e => {
-  if (e.isIntersecting) { watcher.unobserve(e.target); loadThumb(e.target); }
+  if (e.isIntersecting) { watcher.unobserve(e.target); waiting.push(e.target); pump(); }
 }), { rootMargin: "300px" }) : null;
-function loadThumb(box) { waiting.push(box); pump(); }
 function pump() {
-  while (busy < 4 && waiting.length) { busy++; fetchThumb(waiting.shift()).catch(() => {}).finally(() => { busy--; pump(); }); }
-}
-async function fetchThumb(box) {
-  const id = box.dataset.id; let url = thumbs.get(id);
-  if (url === undefined) {
-    try {
-      const r = await fetch(box.dataset.link, { headers: { Authorization: "Bearer " + token } });
-      if (!r.ok) throw new Error();
-      url = URL.createObjectURL(await r.blob());
-    } catch (e) { url = box.dataset.link; }         // por esa vía no: se prueba cargándola directo
-    thumbs.set(id, url);
+  while (busy < 3 && waiting.length) {
+    const box = waiting.shift();
+    if (!box.isConnected) continue;
+    busy++;
+    findMini(box._file).then(url => url && box.isConnected && putImg(box, url, box._file))
+      .catch(e => { if (e instanceof Expired) logout("La sesión venció (dura una hora). Entrá de nuevo."); })
+      .finally(() => { busy--; pump(); });
   }
-  if (!url || !box.isConnected) return;
+}
+function putImg(box, url, f) {
   const img = new Image();
   img.alt = "";
-  img.onload = () => { box.textContent = ""; box.append(img); };
-  img.onerror = () => thumbs.set(id, "");
+  img.onload = () => {
+    box.append(img);
+    if (kind(f) !== "img") box.append(el("span", "kind", ext(f.name).slice(0, 5)));   // sobre la miniatura, el tipo
+  };
+  img.onerror = () => remember(f, null);
   img.src = url;
 }
 
 function tile(f, dir) {
   const li = el("li"), box = el("div", "thumb" + (dir ? " dir" : ""));
-  if (dir) box.innerHTML = FOLDER_SVG;
-  else {
-    box.append(el("span", "ext", ext(f.name).slice(0, 5)));
-    if (f.thumbnailLink && thumbs.get(f.id) !== "") {
-      box.dataset.id = f.id; box.dataset.link = f.thumbnailLink.replace(/=s\d+$/, "=s320");
-      watcher ? watcher.observe(box) : loadThumb(box);
-    }
+  if (dir) { box.innerHTML = FOLDER_SVG; li.append(box, el("div", "name", f.name)); return li; }
+  const k = kind(f), label = ext(f.name).slice(0, 5);
+  if (!k) {
+    box.classList.add("no"); li.classList.add("off");
+    box.append(el("span", "ext", label), el("span", "nope", "no abre"));
+  } else {
+    box.append(el("span", "ext", label));
+    const known = minis.get(miniKey(f));
+    if (known) putImg(box, known, f);
+    else if (known !== "") { box._file = f; watcher ? watcher.observe(box) : (waiting.push(box), pump()); }
   }
   li.append(box, el("div", "name", f.name));
   return li;
 }
 
+/* ---------- pantalla de archivos ---------- */
 function draw() {
   const needle = $("find").value.trim().toLocaleLowerCase("es");
   const rows = needle ? current.filter(f => f.name.toLocaleLowerCase("es").includes(needle)) : current;
@@ -276,12 +422,15 @@ function draw() {
   $("bMode").textContent = grid ? "Ver como lista" : "Ver como íconos";
   if (watcher) watcher.disconnect();
   waiting.length = 0;
+  let closed = 0;
   for (const f of rows) {
-    const dir = f.mimeType === FOLDER, li = grid ? tile(f, dir) : el("li");
+    const dir = f.mimeType === FOLDER, k = dir ? "dir" : kind(f);
+    if (!k) closed++;
+    const li = grid ? tile(f, dir) : el("li");
     if (!grid) {
-      li.append(el("span", "tag" + (dir ? " dir" : ""), dir ? "carp" : ext(f.name).slice(0, 4)));
-      const what = el("div", "what");
-      what.append(el("div", "name", f.name), el("div", "meta", dir ? "Carpeta" : [when(f.modifiedTime), size(f.size)].filter(Boolean).join("  ·  ")));
+      li.append(el("span", "tag" + (dir ? " dir" : k ? "" : " no"), dir ? "carp" : ext(f.name).slice(0, 4)));
+      const what = el("div", "what"), meta = dir ? "Carpeta" : [when(f.modifiedTime), size(f.size), k ? "" : "No se abre en el iPhone"].filter(Boolean).join("  ·  ");
+      what.append(el("div", "name", f.name), el("div", "meta", meta));
       li.append(what, el("span", "go", dir ? "›" : ""));
     }
     li.addEventListener("click", () => dir ? enter(f) : openFile(f));
@@ -290,6 +439,8 @@ function draw() {
   const folders = rows.filter(f => f.mimeType === FOLDER).length, files = rows.length - folders;
   $("count").textContent = [folders ? folders + (folders === 1 ? " carpeta" : " carpetas") : "", files ? files + (files === 1 ? " archivo" : " archivos") : ""]
     .filter(Boolean).join("  ·  ");
+  $("legend").hidden = !closed;
+  $("legend").lastElementChild.textContent = grid ? "Punteados: no se abren en el iPhone" : "Rótulo punteado: no se abre en el iPhone";
   $("empty").hidden = rows.length > 0;
   $("empty").textContent = needle ? "Nada coincide con la búsqueda." : "Esta carpeta está vacía.";
   $("title").textContent = path.length > 1 ? path[path.length - 1].name : "Carpetas";
@@ -347,6 +498,8 @@ async function start() {
   try {
     const me = await call("about", { fields: "user(emailAddress)" });
     const email = (me.user && me.user.emailAddress) || "";
+    const before = store.get("mc_email");
+    if (before && email && before !== email) { forgetMinis(); try { await caches.delete("mc-mini"); } catch (e) {} }
     $("who").textContent = email; store.set("mc_email", email || null);
     const roots = await listAll("name = 'MinCloud' and mimeType = '" + FOLDER + "' and 'root' in parents and trashed = false");
     if (!roots.length) {
@@ -372,17 +525,32 @@ function closeViewer(fromBack) {
   if (!fromBack) history.back();
 }
 
-async function openFile(f) {
-  const mine = ++job, total = Number(f.size || 0);
-  if (total > 400 * 1024 * 1024 && !confirm("Pesa " + size(total) + ". ¿Descargarlo igual?")) return;
+function openFile(f) {
+  const k = kind(f), label = ext(f.name) === "···" ? "Archivo" : "Archivo " + ext(f.name);
   history.pushState({ depth: path.length, view: true }, "");
   scrollBack = window.scrollY;
   document.querySelector("main").hidden = true;
   $("viewer").classList.add("on"); window.scrollTo(0, 0);
-  $("vKind").textContent = ext(f.name) === "···" ? "Archivo" : "Archivo " + ext(f.name);
+  $("vKind").textContent = label;
   $("vName").textContent = f.name;
-  $("vMeta").textContent = [when(f.modifiedTime), size(total)].filter(Boolean).join("  ·  ");
-  $("vActs").hidden = true; $("vShare").hidden = true; $("stage").textContent = "";
+  $("vMeta").textContent = [when(f.modifiedTime), size(f.size)].filter(Boolean).join("  ·  ");
+  $("vShare").hidden = true; $("vOpen").hidden = false; $("vGet").hidden = true;
+  $("stage").textContent = ""; $("vBar").hidden = true;
+  if (k) { $("vActs").hidden = true; fetchFile(f, k); return; }
+  // Lo que el iPhone no abre no se baja solo: se ofrece bajarlo para pasarlo a otra app.
+  $("vState").textContent = "El iPhone no puede mostrar este tipo de archivo. Podés bajarlo y pasarlo a una app que lo abra"
+    + (/^(dwg|dxf)$/i.test(ext(f.name)) ? ", por ejemplo AutoCAD." : ".");
+  $("vActs").hidden = false; $("vOpen").hidden = true; $("vGet").hidden = false;
+  $("vGet").onclick = () => { $("vGet").hidden = true; $("vActs").hidden = true; fetchFile(f, ""); };
+}
+
+async function fetchFile(f, k) {
+  const mine = ++job, total = Number(f.size || 0);
+  if (total > 400 * 1024 * 1024 && !confirm("Pesa " + size(total) + ". ¿Descargarlo igual?")) { closeViewer(false); return; }
+  const known = minis.get(miniKey(f));
+  if (known && (k === "img" || k === "pdf" || k === "video")) {      // mientras baja, se ve la miniatura
+    const ph = el("img", "ph"); ph.src = known; ph.alt = ""; $("stage").append(ph);
+  }
   const bar = $("vBar").firstElementChild; bar.style.width = "0"; $("vBar").hidden = false;
   $("vState").textContent = "Descargando…";
   try {
@@ -398,18 +566,28 @@ async function openFile(f) {
     const mime = f.mimeType || "application/octet-stream", blob = new Blob(parts, { type: mime });
     blobUrl = URL.createObjectURL(blob);
     $("vBar").hidden = true; $("vState").textContent = "";
-    const stage = $("stage");
-    if (mime.startsWith("image/")) { const i = el("img"); i.src = blobUrl; i.alt = f.name; stage.append(i); }
-    else if (mime.startsWith("video/")) { const v = el("video"); v.src = blobUrl; v.controls = true; v.playsInline = true; stage.append(v); }
-    else if (mime.startsWith("audio/")) { const a = el("audio"); a.src = blobUrl; a.controls = true; stage.append(a); }
-    else if ((mime.startsWith("text/") || mime === "application/json") && blob.size < 1048576) stage.append(el("pre", "", await blob.text()));
-    else $("vState").textContent = mime === "application/pdf" ? "Listo. Tocá «Abrir» para leerlo." : "Listo. Tocá «Abrir», o elegí con qué app verlo.";
-    const open = $("vOpen"); open.href = blobUrl; open.textContent = "Abrir";
+    const stage = $("stage"); stage.textContent = "";
+    if (k === "img") { const i = el("img"); i.src = blobUrl; i.alt = f.name; stage.append(i); }
+    else if (k === "video") { const v = el("video"); v.src = blobUrl; v.controls = true; v.playsInline = true; stage.append(v); }
+    else if (k === "audio") { const a = el("audio"); a.src = blobUrl; a.controls = true; stage.append(a); }
+    else if (k === "text" && blob.size < 1048576) stage.append(el("pre", "", await blob.text()));
+    else if (k) $("vState").textContent = "Listo. Tocá «Abrir» para verlo.";
+    else $("vState").textContent = "Listo. Tocá «Compartir o abrir con otra app…» y elegí la app.";
+    const open = $("vOpen"); open.href = blobUrl;
+    if (k === "ar") open.rel = "ar";                // modelos 3D: se abren en realidad aumentada
     $("vActs").hidden = false;
     const file = new File([blob], f.name, { type: mime });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+    if (canShare) {
       $("vShare").hidden = false;
       $("vShare").onclick = () => navigator.share({ files: [file], title: f.name }).catch(() => {});
+    }
+    $("vOpen").hidden = !k && canShare;             // si no se puede compartir, queda «Abrir» para bajarlo
+    if (!k) $("vOpen").textContent = "Descargar";
+    else $("vOpen").textContent = "Abrir";
+    // Ya está bajado: si no tenía miniatura, se hace ahora y queda guardada para la próxima.
+    if ((k === "img" || k === "pdf") && !(known && known.startsWith("blob:")) && blob.size <= 40 * 1048576) {
+      drawMini(k, blob).then(m => { if (m) { miniPut(f, m); remember(f, m); } }).catch(() => {});
     }
   } catch (e) {
     if (mine !== job) return;
@@ -420,7 +598,7 @@ async function openFile(f) {
 
 /* ---------- arranque ---------- */
 $("bLogin").addEventListener("click", login);
-$("bLogout").addEventListener("click", () => logout(""));
+$("bLogout").addEventListener("click", () => logout("", true));
 $("bReload").addEventListener("click", () => token && path.length && show(true));
 $("vClose").addEventListener("click", () => closeViewer(false));
 $("find").addEventListener("input", draw);
